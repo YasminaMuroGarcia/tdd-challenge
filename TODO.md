@@ -62,11 +62,17 @@ SUCCESS! -- 5 Passed | 0 Failed | 6 Pending | 0 Skipped
 PASS
 ```
 
-## Refactor the code
+## Refactor the code in clock.go
 
 The main task is now to refactor `clock.go`. Remove the leading "P" charakters in `roman_test.go` from L22, 31, 36 and 41 to enable the tests one by one. Ginkgo will run all tests when you save changes.
 
 To solve the challenge, you need to add more error handling to `clock.go` to cover the corner cases.
+
+## Showcase remote error handling
+
+In microservice environments, many calls that have been implemented in functions are now remote calls.
+That creates challenges in error handling. To showcase this, the `CurrentRomanTime` function in `clock.go` calls a remote service to get the current time. The remote call is simulated by the `ClockClient` interface. 
+You need to implement error handling for this remote call in `CurrentRomanTime`.
 
 ## Send me the solution
 

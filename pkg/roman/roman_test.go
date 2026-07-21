@@ -5,6 +5,7 @@ import (
 	"github.com/micbar/tdd-challenge/pkg/roman/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/mock"
 )
 
 var _ = Describe("Roman", func() {
@@ -81,21 +82,19 @@ var _ = Describe("Roman", func() {
 			cc = &mocks.ClockClient{}
 			romanClock = roman.New(cc)
 		})
-
-		PIt("handles errors when getting the time from the ClockClient", func() {
-			//TODO use the mock client to make a hypothetical API call
-
-			_, err := romanClock.CurrentRomanTime()
-			Expect(err).To(HaveOccurred())
-		})
-
-		PIt("returns the current time", func() {
-			//TODO use the mock client to make a hypothetical API call
+		It("returns the current time", func() {
+			// the hypothetical gRPC call returns a typed response
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(&roman.TimeResponse{Time: "23:59:59"}, nil)
 
 			rtime, err := romanClock.CurrentRomanTime()
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(rtime).To(Equal("XXIII:LIX:LIX"))
+			cc.AssertExpectations(GinkgoT())
 		})
+		// Add more tests to showcase the error handling of GRPC requests
+		// We do not want to test the mock client but we want to see GRPC error handling.
+		// Think of which kinds of errors could possibly happen.
 	})
 })
 

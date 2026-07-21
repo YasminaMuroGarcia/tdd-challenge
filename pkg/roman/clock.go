@@ -1,17 +1,10 @@
 package roman
 
 import (
+	"context"
 	"regexp"
 	"strconv"
 )
-
-//go:generate mockery --name ClockClient
-
-type ClockClient interface {
-	// returns time string in format: `hh:mm:ss`
-	// this would invoke an hypothetical api call
-	CurrentTime() (string, error)
-}
 
 type RomanClock struct {
 	clockClient ClockClient
@@ -23,11 +16,11 @@ func New(cc ClockClient) *RomanClock {
 
 // CurrentRomanTime() returns the time in roman numbers, e.g. XII:XV:IIX (12:15:08)
 func (rc *RomanClock) CurrentRomanTime() (string, error) {
-	localRomanTime, err := rc.clockClient.CurrentTime()
+	resp, err := rc.clockClient.CurrentTime(context.Background(), &TimeRequest{})
 	if err != nil {
 		return "", err
 	}
-	return rc.TimeToRomanTime(localRomanTime)
+	return rc.TimeToRomanTime(resp.GetTime())
 }
 
 // TimeToRomanTime() transcribes a time string into roman numbers, e.g. XII:XV:IIX (12:15:08)
