@@ -70,6 +70,25 @@ var _ = Describe("Roman", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(time).To(Equal("XXIII:LIX:XI"))
 		})
+		It("returns invalid format when the hour part is malformed", func() {
+			_, err := clock.TimeToRomanTime("2a:10:05")
+			Expect(err).To(MatchError(roman.ErrInvalidFormat))
+		})
+		It("returns invalid format when the minute part is malformed", func() {
+			_, err := clock.TimeToRomanTime("23:1b:05")
+			Expect(err).To(MatchError(roman.ErrInvalidFormat))
+		})
+		It("returns invalid format when the second part is malformed", func() {
+			_, err := clock.TimeToRomanTime("23:10:0c")
+			Expect(err).To(MatchError(roman.ErrInvalidFormat))
+		})
+	})
+
+	Describe("TimeResponse", func() {
+		It("returns an empty string from GetTime when the receiver is nil", func() {
+			var resp *roman.TimeResponse
+			Expect(resp.GetTime()).To(Equal(""))
+		})
 	})
 
 	Describe("CurrentRomanTime", func() {

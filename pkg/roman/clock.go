@@ -2,6 +2,8 @@ package roman
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -13,6 +15,13 @@ type RomanClock struct {
 func New(cc ClockClient) *RomanClock {
 	return &RomanClock{clockClient: cc}
 }
+
+var (
+	ErrInvalidFormat    = errors.New("invalid time format")
+	ErrHourOutOfRange   = errors.New("hour out of range")
+	ErrMinuteOutOfRange = errors.New("minute out of range")
+	ErrSecondOutOfRange = errors.New("second out of range")
+)
 
 // CurrentRomanTime() returns the time in roman numbers, e.g. XII:XV:IIX (12:15:08)
 func (rc *RomanClock) CurrentRomanTime() (string, error) {
@@ -28,12 +37,23 @@ func (rc *RomanClock) TimeToRomanTime(time string) (string, error) {
 	r := regexp.MustCompile(`^(\d{1,2}):(\d{1,2}):(\d{1,2})$`)
 	matches := r.FindStringSubmatch(time)
 
-	// this is bad error handling, improve it
-	hours, err := strconv.ParseInt(matches[1], 10, 64)
-	minutes, err := strconv.ParseInt(matches[2], 10, 64)
-	seconds, err := strconv.ParseInt(matches[3], 10, 64)
+	// ParseInt cannot fail here because the regex ensures that the strings are valid integers
+	hours, _ := strconv.ParseInt(matches[1], 10, 64)
+	if hours > 23 {
+		return "", fmt.Errorf("%w: %d", ErrHourOutOfRange, hours)
+	}
 
-	return rc.intToRoman(int(hours)) + ":" + rc.intToRoman(int(minutes)) + ":" + rc.intToRoman(int(seconds)), err
+	minutes, _ := strconv.ParseInt(matches[2], 10, 64)
+	if minutes > 59 {
+		return "", fmt.Errorf("%w: %d", ErrMinuteOutOfRange, minutes)
+	}
+
+	seconds, _ := strconv.ParseInt(matches[3], 10, 64)
+	if seconds > 59 {
+		return "", fmt.Errorf("%w: %d", ErrSecondOutOfRange, seconds)
+	}
+
+	return rc.intToRoman(int(hours)) + ":" + rc.intToRoman(int(minutes)) + ":" + rc.intToRoman(int(seconds)), nil
 }
 
 func (rc *RomanClock) intToRoman(num int) string {
