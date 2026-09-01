@@ -1,11 +1,15 @@
 package roman_test
 
 import (
+	"errors"
+
 	"github.com/micbar/tdd-challenge/pkg/roman"
 	"github.com/micbar/tdd-challenge/pkg/roman/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ = Describe("Roman", func() {
@@ -109,6 +113,75 @@ var _ = Describe("Roman", func() {
 			rtime, err := romanClock.CurrentRomanTime()
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(rtime).To(Equal("XXIII:LIX:LIX"))
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call fails", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, errors.New("gRPC error"))
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC response is nil", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, nil)
+
+			rtime, err := romanClock.CurrentRomanTime()
+
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC service is unavailable", func() {
+			grpcErr := status.Error(codes.Unavailable, "service unavailable")
+
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, grpcErr)
+
+			rtime, err := romanClock.CurrentRomanTime()
+
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call returns an invalid time format", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(&roman.TimeResponse{Time: "invalid"}, nil)
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call returns a time with out of range hour", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(&roman.TimeResponse{Time: "24:00:00"}, nil)
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call returns a time with out of range minute", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(&roman.TimeResponse{Time: "23:60:00"}, nil)
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call returns a time with out of range second", func() {
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(&roman.TimeResponse{Time: "23:59:60"}, nil)
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
 			cc.AssertExpectations(GinkgoT())
 		})
 		// Add more tests to showcase the error handling of GRPC requests
