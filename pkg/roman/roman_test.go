@@ -23,7 +23,7 @@ var _ = Describe("Roman", func() {
 			clock = &roman.RomanClock{}
 		)
 
-		PIt("reports an error when invalid time format is used", func() {
+		It("reports an error when invalid time format is used", func() {
 			invalid := []string{"foo", "-5:00:00", ":00:00", "111:00:00", "00:01:02:03"}
 			for _, i := range invalid {
 				t, err := clock.TimeToRomanTime(i)
@@ -32,17 +32,17 @@ var _ = Describe("Roman", func() {
 			}
 		})
 
-		PIt("fails if hour is out of range", func() {
+		It("fails if hour is out of range", func() {
 			_, err := clock.TimeToRomanTime("24:10:05")
 			Expect(err).To(HaveOccurred())
 		})
 
-		PIt("fails if minute is out of range", func() {
+		It("fails if minute is out of range", func() {
 			_, err := clock.TimeToRomanTime("23:60:05")
 			Expect(err).To(HaveOccurred())
 		})
 
-		PIt("fails if second is out of range", func() {
+		It("fails if second is out of range", func() {
 			_, err := clock.TimeToRomanTime("23:10:60")
 			Expect(err).To(HaveOccurred())
 		})

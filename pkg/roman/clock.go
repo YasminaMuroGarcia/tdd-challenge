@@ -27,7 +27,7 @@ var (
 func (rc *RomanClock) CurrentRomanTime() (string, error) {
 	resp, err := rc.clockClient.CurrentTime(context.Background(), &TimeRequest{})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get current time: %w", err)
 	}
 	return rc.TimeToRomanTime(resp.GetTime())
 }
@@ -36,6 +36,9 @@ func (rc *RomanClock) CurrentRomanTime() (string, error) {
 func (rc *RomanClock) TimeToRomanTime(time string) (string, error) {
 	r := regexp.MustCompile(`^(\d{1,2}):(\d{1,2}):(\d{1,2})$`)
 	matches := r.FindStringSubmatch(time)
+	if len(matches) != 4 {
+		return "", fmt.Errorf("%w: %q", ErrInvalidFormat, time)
+	}
 
 	// ParseInt cannot fail here because the regex ensures that the strings are valid integers
 	hours, _ := strconv.ParseInt(matches[1], 10, 64)
