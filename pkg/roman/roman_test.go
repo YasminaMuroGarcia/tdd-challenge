@@ -184,6 +184,44 @@ var _ = Describe("Roman", func() {
 			Expect(rtime).To(Equal(""))
 			cc.AssertExpectations(GinkgoT())
 		})
+		It("returns an error when the gRPC call times out", func() {
+			grpcErr := status.Error(codes.DeadlineExceeded, "context deadline exceeded")
+
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, grpcErr)
+
+			rtime, err := romanClock.CurrentRomanTime()
+
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC service fails internally", func() {
+			grpcErr := status.Error(codes.Internal, "internal server error")
+
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, grpcErr)
+
+			rtime, err := romanClock.CurrentRomanTime()
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+
+			cc.AssertExpectations(GinkgoT())
+		})
+		It("returns an error when the gRPC call is canceled", func() {
+			grpcErr := status.Error(codes.Canceled, "context canceled")
+
+			cc.On("CurrentTime", mock.Anything, mock.Anything).
+				Return(nil, grpcErr)
+
+			rtime, err := romanClock.CurrentRomanTime()
+
+			Expect(err).To(HaveOccurred())
+			Expect(rtime).To(Equal(""))
+
+			cc.AssertExpectations(GinkgoT())
+		})
 		// Add more tests to showcase the error handling of GRPC requests
 		// We do not want to test the mock client but we want to see GRPC error handling.
 		// Think of which kinds of errors could possibly happen.
